@@ -17,6 +17,7 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <exception>
 #include <obs/service.hpp>
 
 #include <boost/program_options.hpp>
@@ -27,7 +28,7 @@ using service =
                  obs::param<std::optional<std::string>, "p2", "Param 2">,
                  obs::param<std::vector<std::string>, "p3", "Param 3">>;
 
-int main(int argc, const char *const *argv) {
+int main(int argc, const char *const *argv) try {
     namespace po = boost::program_options;
     po::options_description desc {service::options_description()};
     po::variables_map vm;
@@ -50,4 +51,13 @@ int main(int argc, const char *const *argv) {
             std::cout << p << std::endl;
     }
     return 0;
+} catch (const boost::program_options::error &e) {
+    std::cerr << argv[0] << ": Program arguments error: " << e.what() << "\n";
+    return 1;
+} catch (const std::exception &e) {
+    std::cerr << argv[0] << ": Error: " << e.what() << "\n";
+    return 1;
+} catch (...) {
+    std::cerr << "Unknown error!\n";
+    return 1;
 }
