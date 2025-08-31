@@ -62,7 +62,7 @@ namespace obs {
         template <typename... PARAMS> struct params;
 
         template<> struct params<> {
-            constexpr static const string_literal xml = "";
+            constexpr static const string_literal xml_literal = "";
         };
 
         template <typename TYPE,
@@ -70,14 +70,14 @@ namespace obs {
                   string_literal DESCR,
                   typename... PARAMS>
         struct params<param<TYPE, NAME, DESCR>, PARAMS...>: params<PARAMS...> {
-            constexpr static const string_literal xml =
+            constexpr static const string_literal xml_literal =
                 string_literal("  <parameter name=\"") + NAME +
                 string_literal("\">\n") +
                 string_literal("    <description>") + DESCR +
                 string_literal("</description>\n") +
                 param_extra<TYPE>::xml +
                 string_literal("  </parameter>\n") +
-                params<PARAMS...>::xml;
+                params<PARAMS...>::xml_literal;
         };
     }
 
@@ -93,7 +93,7 @@ namespace obs {
             string_literal("</summary>\n") +
             string_literal("  <description>") + DESCR +
             string_literal("</description>\n") +
-            detail::params<PARAMS...>::xml +
+            detail::params<PARAMS...>::xml_literal +
             string_literal("</service>\n");
     public:
         constexpr static const char *const name = NAME.value;
