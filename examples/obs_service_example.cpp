@@ -20,8 +20,6 @@
 #include <exception>
 #include <obs/service.hpp>
 
-#include <boost/program_options.hpp>
-
 using service =
     obs::service<"example", "Example service", "Example service.",
                  obs::param<std::string, "p1", "Param 1">,
@@ -40,9 +38,6 @@ int main(int argc, const char *const *argv) try {
     for (const auto &p: srv.get<"p3">())
         std::cout << p << std::endl;
     return 0;
-} catch (const boost::program_options::error &e) {
-    std::cerr << argv[0] << ": Program arguments error: " << e.what() << "\n";
-    return 1;
 } catch (const std::exception &e) {
     std::cerr << argv[0] << ": Error: " << e.what() << "\n";
     return 1;
