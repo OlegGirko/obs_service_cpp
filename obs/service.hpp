@@ -61,8 +61,10 @@ namespace obs {
             template <string_literal NAME>
             static const type &vm_get(const po::variables_map &vm)
             {
+                constexpr static const string_literal po_name =
+                    string_literal("--") + NAME;
                 if (!vm.count(NAME.value))
-                    throw po::required_option(NAME.value);
+                    throw po::required_option(po_name.value);
                 return vm[NAME.value].template as<type>();
             }
         };
