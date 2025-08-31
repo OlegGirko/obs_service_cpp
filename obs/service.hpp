@@ -100,6 +100,29 @@ namespace obs {
             }
         };
 
+        template <> struct param_traits<bool> {
+            using type = bool;
+            using po_type = bool;
+
+            constexpr static const string_literal extra_xml =
+                "    <allowedvalue>true</allowedvalue>\n"
+                "    <allowedvalue>yes</allowedvalue>\n"
+                "    <allowedvalue>on</allowedvalue>\n"
+                "    <allowedvalue>1</allowedvalue>\n"
+                "    <allowedvalue>false</allowedvalue>\n"
+                "    <allowedvalue>no</allowedvalue>\n"
+                "    <allowedvalue>off</allowedvalue>\n"
+                "    <allowedvalue>0</allowedvalue>\n";
+
+            template <string_literal NAME>
+            static type vm_get(const po::variables_map &vm) {
+                if (vm.count(NAME.value))
+                    return vm[NAME.value].template as<type>();
+                else
+                    return false;
+            }
+        };
+
         template <string_literal NAME> struct name_tag {
             constexpr static const char *const value = NAME.value;
         };
