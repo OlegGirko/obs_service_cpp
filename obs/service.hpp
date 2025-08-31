@@ -49,21 +49,47 @@ namespace obs {
         using type = TYPE;
     };
 
+    template <string_literal NAME> struct name_tag {
+        constexpr static const char *const value = NAME.value;
+    };
+
     namespace detail {
         template <typename TYPE> struct param_extra {
+            using type = TYPE;
             using po_type = TYPE;
             constexpr static const string_literal xml = "    <required/>\n";
+            static const type &vm_get(const po::variables_map &vm,
+                                      const char *name)
+            {
+                if (!vm.count(name))
+                    throw po::required_option(name);
+                return vm[name].as<type>();
+            }
         };
 
         template <typename TYPE> struct param_extra<std::optional<TYPE>> {
+            using type = std::optional<TYPE>;
             using po_type = TYPE;
             constexpr static const string_literal xml = "";
+            static type vm_get(const po::variables_map &vm, const char *name) {
+                if (vm.count(name))
+                    return vm[name].as<po_type>();
+                else
+                    return {};
+            }
         };
 
         template <typename TYPE> struct param_extra<std::vector<TYPE>> {
-            using po_type = std::vector<TYPE>;
+            using type = std::vector<TYPE>;
+            using po_type = type;
             constexpr static const string_literal xml =
                 "    <allowmultiple/>\n";
+            static type vm_get(const po::variables_map &vm, const char *name) {
+                if (vm.count(name))
+                    return vm[name].as<type>();
+                else
+                    return {};
+            }
         };
 
         template <typename... PARAMS> struct params;
@@ -72,6 +98,8 @@ namespace obs {
             constexpr static const string_literal xml_literal = "";
 
             static void add_options(po::options_description &) {}
+
+            params(const po::variables_map &) {}
         };
 
         template <typename TYPE,
@@ -89,6 +117,14 @@ namespace obs {
                 params<PARAMS...>::xml_literal;
 
             using type = TYPE;
+            type value;
+
+            constexpr const type &get(name_tag<NAME>) const {return value;}
+
+            template <string_literal N>
+            constexpr const auto &get(name_tag<N>) const {
+                return this->params<PARAMS...>::get(name_tag<N>());
+            }
 
             static void add_options(po::options_description &desc) {
                 using po_type = typename param_extra<type>::po_type;
@@ -97,6 +133,10 @@ namespace obs {
                                    DESCR.value);
                 params<PARAMS...>::add_options(desc);
             }
+
+            params(const po::variables_map &vm)
+            : params<PARAMS...>{vm},
+            value{param_extra<type>::vm_get(vm, NAME.value)} {}
         };
     }
 
@@ -129,6 +169,9 @@ namespace obs {
             detail::params<PARAMS...>::add_options(desc);
             return desc;
         }
+
+        service(const po::variables_map &vm)
+        : detail::params<PARAMS...>{vm} {}
     };
 }
 
