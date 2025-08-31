@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <optional>
 #include <vector>
+#include <cstdlib>
 
 #include <boost/program_options.hpp>
 
@@ -154,6 +155,24 @@ namespace obs {
             string_literal("</description>\n") +
             detail::params<PARAMS...>::xml_literal +
             string_literal("</service>\n");
+
+            static po::variables_map parse_program_args(int argc,
+                                                        const char *const *argv)
+            {
+                po::options_description desc {options_description()};
+                po::variables_map vm;
+                po::store(po::parse_command_line(argc, argv, desc), vm);
+                po::notify(vm);
+                if (vm.count("help")) {
+                    std::cout << desc << "\n";
+                    std::exit(0);
+                } else if (vm.count("xml")) {
+                    std::cout << service::xml;
+                    std::exit(0);
+                }
+                return vm;
+            }
+
     public:
         constexpr static const char *const name = NAME.value;
         constexpr static const char *const summary = SUMMARY.value;
@@ -172,6 +191,9 @@ namespace obs {
 
         service(const po::variables_map &vm)
         : detail::params<PARAMS...>{vm} {}
+
+        service(int argc, const char *const *argv)
+        : detail::params<PARAMS...>{parse_program_args(argc, argv)} {}
 
         template <string_literal N> const auto &get() const {
             return this->get_impl(detail::name_tag<N>());
