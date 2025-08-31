@@ -49,10 +49,6 @@ namespace obs {
         using type = TYPE;
     };
 
-    template <string_literal NAME> struct name_tag {
-        constexpr static const char *const value = NAME.value;
-    };
-
     namespace detail {
         template <typename TYPE> struct param_extra {
             using type = TYPE;
@@ -92,6 +88,10 @@ namespace obs {
             }
         };
 
+        template <string_literal NAME> struct name_tag {
+            constexpr static const char *const value = NAME.value;
+        };
+
         template <typename... PARAMS> struct params;
 
         template<> struct params<> {
@@ -119,11 +119,11 @@ namespace obs {
             using type = TYPE;
             type value;
 
-            constexpr const type &get(name_tag<NAME>) const {return value;}
+            constexpr const type &get_impl(name_tag<NAME>) const {return value;}
 
             template <string_literal N>
-            constexpr const auto &get(name_tag<N>) const {
-                return this->params<PARAMS...>::get(name_tag<N>());
+            constexpr const auto &get_impl(name_tag<N>) const {
+                return this->params<PARAMS...>::get_impl(name_tag<N>());
             }
 
             static void add_options(po::options_description &desc) {
@@ -172,6 +172,11 @@ namespace obs {
 
         service(const po::variables_map &vm)
         : detail::params<PARAMS...>{vm} {}
+
+        template <string_literal N> const auto &get() const {
+            return this->get_impl(detail::name_tag<N>());
+        }
+
     };
 }
 
