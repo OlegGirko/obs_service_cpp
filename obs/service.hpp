@@ -51,39 +51,48 @@ namespace obs {
     };
 
     namespace detail {
-        template <typename TYPE> struct param_extra {
+        template <typename TYPE> struct param_traits {
             using type = TYPE;
             using po_type = TYPE;
-            constexpr static const string_literal xml = "    <required/>\n";
-            static const type &vm_get(const po::variables_map &vm,
-                                      const char *name)
+
+            constexpr static const string_literal extra_xml =
+                "    <required/>\n";
+
+            template <string_literal NAME>
+            static const type &vm_get(const po::variables_map &vm)
             {
-                if (!vm.count(name))
-                    throw po::required_option(name);
-                return vm[name].as<type>();
+                if (!vm.count(NAME.value))
+                    throw po::required_option(NAME.value);
+                return vm[NAME.value].template as<type>();
             }
         };
 
-        template <typename TYPE> struct param_extra<std::optional<TYPE>> {
+        template <typename TYPE> struct param_traits<std::optional<TYPE>> {
             using type = std::optional<TYPE>;
             using po_type = TYPE;
-            constexpr static const string_literal xml = "";
-            static type vm_get(const po::variables_map &vm, const char *name) {
-                if (vm.count(name))
-                    return vm[name].as<po_type>();
+
+            constexpr static const string_literal extra_xml = "";
+
+            template <string_literal NAME>
+            static type vm_get(const po::variables_map &vm) {
+                if (vm.count(NAME.value))
+                    return vm[NAME.value].template as<po_type>();
                 else
                     return {};
             }
         };
 
-        template <typename TYPE> struct param_extra<std::vector<TYPE>> {
+        template <typename TYPE> struct param_traits<std::vector<TYPE>> {
             using type = std::vector<TYPE>;
             using po_type = type;
-            constexpr static const string_literal xml =
+
+            constexpr static const string_literal extra_xml =
                 "    <allowmultiple/>\n";
-            static type vm_get(const po::variables_map &vm, const char *name) {
-                if (vm.count(name))
-                    return vm[name].as<type>();
+
+            template <string_literal NAME>
+            static type vm_get(const po::variables_map &vm) {
+                if (vm.count(NAME.value))
+                    return vm[NAME.value].template as<type>();
                 else
                     return {};
             }
@@ -113,7 +122,7 @@ namespace obs {
                 string_literal("\">\n") +
                 string_literal("    <description>") + DESCR +
                 string_literal("</description>\n") +
-                param_extra<TYPE>::xml +
+                param_traits<TYPE>::extra_xml +
                 string_literal("  </parameter>\n") +
                 params<PARAMS...>::xml_literal;
 
@@ -128,7 +137,7 @@ namespace obs {
             }
 
             static void add_options(po::options_description &desc) {
-                using po_type = typename param_extra<type>::po_type;
+                using po_type = typename param_traits<type>::po_type;
                 desc.add_options()(NAME.value,
                                    po::value<po_type>(),
                                    DESCR.value);
@@ -137,7 +146,7 @@ namespace obs {
 
             params(const po::variables_map &vm)
             : params<PARAMS...>{vm},
-            value{param_extra<type>::vm_get(vm, NAME.value)} {}
+            value{param_traits<type>::template vm_get<NAME>(vm)} {}
         };
     }
 
