@@ -29,27 +29,16 @@ using service =
                  obs::param<std::vector<std::string>, "p3", "Param 3">>;
 
 int main(int argc, const char *const *argv) try {
-    namespace po = boost::program_options;
-    po::options_description desc {service::options_description()};
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
-    } else if (vm.count("xml")) {
-        std::cout << service::xml;
-    } else {
-        service srv{vm};
-        std::cout << "p1 = " << srv.get<"p1">() << "\n";
-        const auto &p2 = srv.get<"p2">();
-        if (p2)
-            std::cout << "p2 = " << *p2 << std::endl;
-        else
-            std::cout << "p2 is absent\n";
-        std::cout << "p3:\n";
-        for (const auto &p: srv.get<"p3">())
-            std::cout << p << std::endl;
-    }
+    service srv{argc, argv};
+    std::cout << "p1 = " << srv.get<"p1">() << "\n";
+    const auto &p2 = srv.get<"p2">();
+    if (p2)
+        std::cout << "p2 = " << *p2 << std::endl;
+    else
+        std::cout << "p2 is absent\n";
+    std::cout << "p3:\n";
+    for (const auto &p: srv.get<"p3">())
+        std::cout << p << std::endl;
     return 0;
 } catch (const boost::program_options::error &e) {
     std::cerr << argv[0] << ": Program arguments error: " << e.what() << "\n";
