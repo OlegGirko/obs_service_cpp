@@ -20,7 +20,11 @@
 #include <optional>
 #include <vector>
 
+#include <boost/program_options.hpp>
+
 namespace obs {
+
+    namespace po = boost::program_options;
 
     template<size_t N> struct string_literal {
         constexpr string_literal() {}
@@ -47,14 +51,17 @@ namespace obs {
 
     namespace detail {
         template <typename TYPE> struct param_extra {
+            using po_type = TYPE;
             constexpr static const string_literal xml = "    <required/>\n";
         };
 
         template <typename TYPE> struct param_extra<std::optional<TYPE>> {
+            using po_type = TYPE;
             constexpr static const string_literal xml = "";
         };
 
         template <typename TYPE> struct param_extra<std::vector<TYPE>> {
+            using po_type = std::vector<TYPE>;
             constexpr static const string_literal xml =
                 "    <allowmultiple/>\n";
         };
@@ -63,6 +70,8 @@ namespace obs {
 
         template<> struct params<> {
             constexpr static const string_literal xml_literal = "";
+
+            static void add_options(po::options_description &) {}
         };
 
         template <typename TYPE,
@@ -78,6 +87,16 @@ namespace obs {
                 param_extra<TYPE>::xml +
                 string_literal("  </parameter>\n") +
                 params<PARAMS...>::xml_literal;
+
+            using type = TYPE;
+
+            static void add_options(po::options_description &desc) {
+                using po_type = typename param_extra<type>::po_type;
+                desc.add_options()(NAME.value,
+                                   po::value<po_type>(),
+                                   DESCR.value);
+                params<PARAMS...>::add_options(desc);
+            }
         };
     }
 
@@ -100,6 +119,16 @@ namespace obs {
         constexpr static const char *const summary = SUMMARY.value;
         constexpr static const char *const description = DESCR.value;
         constexpr static const char *const xml = xml_literal.value;
+
+        static po::options_description options_description() {
+            po::options_description desc("Allowed options");
+            desc.add_options()
+            ("help", "produce help message")
+            ("xml", "print OBS service XML description")
+            ;
+            detail::params<PARAMS...>::add_options(desc);
+            return desc;
+        }
     };
 }
 

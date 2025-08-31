@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 project(obs_service_cpp)
 set(CMAKE_CXX_STANDARD 23)
+find_package(Boost 1.71 REQUIRED COMPONENTS program_options)
 add_subdirectory(tests)

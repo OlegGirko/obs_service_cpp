@@ -19,13 +19,24 @@
 #include <vector>
 #include <obs/service.hpp>
 
+#include <boost/program_options.hpp>
+
 using service =
     obs::service<"example", "Example service", "Example service.",
                  obs::param<std::string, "p1", "Param 1">,
                  obs::param<std::optional<std::string>, "p2", "Param 2">,
                  obs::param<std::vector<std::string>, "p3", "Param 3">>;
 
-int main() {
-    std::cout << service::xml;
+int main(int argc, const char *const *argv) {
+    namespace po = boost::program_options;
+    po::options_description desc {service::options_description()};
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help")) {
+        std::cout << desc << "\n";
+    } else if (vm.count("xml")) {
+        std::cout << service::xml;
+    }
     return 0;
 }

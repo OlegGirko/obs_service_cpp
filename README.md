@@ -10,7 +10,10 @@ to define an OBS source service and its parameters.
 
 ## Prerequisites
 
-You need a C++23 compiler (like GCC or Clang) with a standard C++23 library.
+You need:
+
+* a C++23 compiler (like GCC or Clang) with a standard C++23 library;
+* Boost.Program_options C++ library.
 
 ## License
 
