@@ -1,6 +1,0 @@
-set(TESTS test_xml)
-include_directories(${obs_service_cpp_SOURCE_DIR})
-foreach(test ${TESTS})
-  add_executable(${test} ${test}.cpp)
-  target_link_libraries(${test} Boost::program_options)
-endforeach(test)
