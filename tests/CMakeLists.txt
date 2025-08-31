@@ -1,0 +1,5 @@
+set(TESTS test_xml)
+include_directories(${obs_service_cpp_SOURCE_DIR})
+foreach(test ${TESTS})
+  add_executable(${test} ${test}.cpp)
+endforeach(test)
