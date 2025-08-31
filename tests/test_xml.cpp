@@ -26,6 +26,6 @@ using service =
                  obs::param<std::vector<std::string>, "p3", "Param 3">>;
 
 int main() {
-    std::cout << service::xml.value;
+    std::cout << service::xml;
     return 0;
 }

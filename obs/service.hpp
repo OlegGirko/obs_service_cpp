@@ -85,19 +85,21 @@ namespace obs {
               string_literal SUMMARY,
               string_literal DESCR,
               typename... PARAMS>
-    struct service: detail::params<PARAMS...> {
-        constexpr static const string_literal name = NAME;
-        constexpr static const string_literal summary = SUMMARY;
-        constexpr static const string_literal description = DESCR;
-        constexpr static const string_literal xml =
-            string_literal("<service name=\"") + name +
+    class service: public detail::params<PARAMS...> {
+        constexpr static const string_literal xml_literal =
+            string_literal("<service name=\"") + NAME +
             string_literal("\">\n") +
-            string_literal("  <summary>") + summary +
+            string_literal("  <summary>") + SUMMARY +
             string_literal("</summary>\n") +
-            string_literal("  <description>") + description +
+            string_literal("  <description>") + DESCR +
             string_literal("</description>\n") +
             detail::params<PARAMS...>::xml +
             string_literal("</service>\n");
+    public:
+        constexpr static const char *const name = NAME.value;
+        constexpr static const char *const summary = SUMMARY.value;
+        constexpr static const char *const description = DESCR.value;
+        constexpr static const char *const xml = xml_literal.value;
     };
 }
 
