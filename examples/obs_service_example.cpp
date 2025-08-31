@@ -24,7 +24,8 @@ using service =
     obs::service<"example", "Example service", "Example service.",
                  obs::param<std::string, "p1", "Param 1">,
                  obs::param<std::optional<std::string>, "p2", "Param 2">,
-                 obs::param<std::vector<std::string>, "p3", "Param 3">>;
+                 obs::param<std::vector<std::string>, "p3", "Param 3">,
+                 obs::param<bool, "p4", "Param 4 [bool]">>;
 
 int main(int argc, const char *const *argv) try {
     service srv{argc, argv};
@@ -37,6 +38,7 @@ int main(int argc, const char *const *argv) try {
     std::cout << "p3:\n";
     for (const auto &p: srv.get<"p3">())
         std::cout << p << std::endl;
+    std::cout << "p4 = " << (srv.get<"p4">() ? "true" : "false") << "\n";
     return 0;
 } catch (const std::exception &e) {
     std::cerr << argv[0] << ": Error: " << e.what() << "\n";
