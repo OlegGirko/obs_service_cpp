@@ -43,12 +43,19 @@ namespace obs {
     //! @code
     //! std::cout << tag<"Hello">::value << "\n";
     //! @endcode
-    template<size_t N> struct string_literal {
+    template<size_t N> class string_literal {
         constexpr string_literal() {}
+    public:
         constexpr string_literal(const char (&str)[N]) {
             std::copy_n(str, N, value);
         }
+
         char value[N]; //!< value of the string literal
+
+        template <size_t N1, size_t N2>
+        constexpr friend string_literal<N1 + N2 - 1>
+        operator+(const string_literal<N1> s1,
+                  const string_literal<N2> s2);
     };
 
     //! @brief Concatenate two string literals
