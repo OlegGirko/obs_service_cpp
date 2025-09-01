@@ -21,11 +21,14 @@
 #include <obs/service.hpp>
 
 using service =
-    obs::service<"example", "Example service", "Example service.",
-                 obs::param<std::string, "p1", "Param 1">,
-                 obs::param<std::optional<std::string>, "p2", "Param 2">,
-                 obs::param<std::vector<std::string>, "p3", "Param 3">,
-                 obs::param<bool, "p4", "Param 4 [bool]">>;
+    obs::service<"example", "Example service",
+                 "An example service that prints its parameters.",
+                 obs::param<std::string, "p1", "String parameter [required]">,
+                 obs::param<std::optional<unsigned int>, "p2",
+                            "Integer parameter [optional]">,
+                 obs::param<std::vector<std::string>, "p3",
+                            "Another string parameter [multiple]">,
+                 obs::param<bool, "p4", "Boolean parameter">>;
 
 int main(int argc, const char *const *argv) try {
     service srv{argc, argv};
