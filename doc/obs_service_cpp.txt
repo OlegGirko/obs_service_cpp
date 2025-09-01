@@ -94,6 +94,7 @@
 //!
 //! int main(int argc, const char *const *argv) try {
 //!     service srv{argc, argv};
+//!     std::cout << "outdir = " << srv.outdir() << "\n"
 //!     std::cout << "p1 = " << srv.get<"p1">() << "\n";
 //!     const auto &p2 = srv.get<"p2">();
 //!     if (p2)
@@ -115,12 +116,13 @@
 //! you can invoke it like this:
 //!
 //! @code
-//! obs_service_example --p1 aaa --p2 42 --p3 a1 --p3 a2 --p4 yes
+//! obs_service_example --outdir /tmp --p1 aaa --p2 42 --p3 a1 --p3 a2 --p4 yes
 //! @endcode
 //!
 //! to get the following output:
 //!
 //! @code
+//! outdir = "/tmp"
 //! p1 = aaa
 //! p2 = 42
 //! p3:

@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <optional>
 #include <vector>
+#include <filesystem>
 #include <cstdlib>
 
 #include <boost/program_options.hpp>
@@ -241,6 +242,7 @@ namespace obs {
     //!
     //! int main(int argc, const char *const *argv) try {
     //!     service srv{argc, argv};
+    //!     std::cout << "outdir = " << srv.outdir() << "\n"
     //!     std::cout << "p1 = " << srv.get<"p1">() << "\n";
     //!     const auto &p2 = srv.get<"p2">();
     //!     if (p2)
@@ -258,6 +260,11 @@ namespace obs {
               string_literal DESCR,
               typename... PARAMS>
     class service: public detail::params<PARAMS...> {
+    public:
+        //! Output directory path type
+        using path_type = std::filesystem::path;
+
+    private:
         constexpr static const string_literal xml_literal =
             string_literal("<service name=\"") + NAME +
             string_literal("\">\n") +
@@ -285,6 +292,8 @@ namespace obs {
                 return vm;
             }
 
+        path_type outdir_;
+
     public:
         //! OBS service name
         constexpr static const char *const name = NAME.value;
@@ -304,6 +313,7 @@ namespace obs {
         static po::options_description options_description() {
             po::options_description desc("Allowed options");
             desc.add_options()
+            ("outdir", po::value<std::filesystem::path>(), "output directory")
             ("help", "produce help message")
             ("xml", "print OBS service XML description")
             ;
@@ -314,7 +324,9 @@ namespace obs {
         //! @brief Construct OBS source service from existing variables_map
         //! @param vm variables map obtained from command line arguments
         service(const po::variables_map &vm)
-        : detail::params<PARAMS...>{vm} {}
+        : detail::params<PARAMS...>{vm},
+          outdir_{detail::param_traits<path_type>::template vm_get<"outdir">(vm)}
+        {}
 
         //! @brief Construct OBS source service from command line arguments
         //! @param argc argument counter, first argument of `main()` function
@@ -335,7 +347,7 @@ namespace obs {
         //!   this description can be written to `NAME.service` file
         //!   (where `NAME` is the name of the OBS service).
         service(int argc, const char *const *argv)
-        : detail::params<PARAMS...>{parse_program_args(argc, argv)} {}
+        : service{parse_program_args(argc, argv)} {}
 
         //! @brief Value of service parameter
         //! @tparam N string literal containing the name of parameter
@@ -344,6 +356,9 @@ namespace obs {
             return this->get_impl(detail::name_tag<N>());
         }
 
+        //! @brief Output directory path
+        //! @return path to the output directory
+        const path_type &outdir() const {return outdir_;}
     };
 }
 
