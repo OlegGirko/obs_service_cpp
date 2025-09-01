@@ -12,9 +12,11 @@ to define an OBS source service and its parameters.
 
 You need:
 
-* CMake version 3.27 or later;
-* a C++23 compiler (like GCC or Clang) with a standard C++23 library;
-* Boost.Program_options C++ library.
+* [CMake](https://cmake.org/) version 3.27 or later;
+* a C++23 compiler (like [GCC](https://gcc.gnu.org/) or
+  [Clang](https://clang.llvm.org/)) with a standard C++23 library;
+* [Boost.Program_options](https://www.boost.org/library/latest/program_options/)
+  C++ library.
 
 ## License
 
