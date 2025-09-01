@@ -46,6 +46,8 @@ namespace obs {
     template<size_t N> class string_literal {
         constexpr string_literal() {}
     public:
+        //! @brief Construct a string literal wrapper from C++ string literal
+        //! @param str C++ string literal (string in double quotes)
         constexpr string_literal(const char (&str)[N]) {
             std::copy_n(str, N, value);
         }
