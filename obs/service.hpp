@@ -27,14 +27,33 @@ namespace obs {
 
     namespace po = boost::program_options;
 
+    //! @brief String literal for template parameters
+    //! @tparam N length of the string (including zero byte at the end)
+    //! @details
+    //! This is simple char array wrapper that can be used for
+    //! passing string literals as template arguments.
+    //! You can define a template to store compile-time strings like this:
+    //! @code
+    //! template <obs::string_literal NAME> struct tag {
+    //!     constexpr static const char *const value = NAME.value;
+    //! };
+    //! @endcode
+    //! and then use it like this:
+    //! @code
+    //! std::cout << tag<"Hello">::value << "\n";
+    //! @endcode
     template<size_t N> struct string_literal {
         constexpr string_literal() {}
         constexpr string_literal(const char (&str)[N]) {
             std::copy_n(str, N, value);
         }
-        char value[N];
+        char value[N]; //!< value of the string literal
     };
 
+    //! @brief Concatenate two string literals
+    //! @param s1 first string literal to concatenate
+    //! @param s2 second string literal to concatenate
+    //! @return constructed string literal with concatenated s1 and s2
     template <size_t N1, size_t N2>
     constexpr string_literal<N1 + N2 - 1> operator+(const string_literal<N1> s1,
                                                     const string_literal<N2> s2)
@@ -45,8 +64,18 @@ namespace obs {
         return result;
     }
 
+    //! @brief OBS service parameter definition
+    //! @tparam TYPE parameter type
+    //! @tparam NAME a string literal containing parameter name
+    //! @tparam DESCR a string literal containing parameter description
+    //! @details
+    //! Usage example:
+    //! @code
+    //! obs::param<std::string, "p1", "String parameter [required]">
+    //! @endcode
     template <typename TYPE, string_literal NAME, string_literal DESCR>
     struct param {
+        //! OBS parameter type
         using type = TYPE;
     };
 
@@ -175,6 +204,55 @@ namespace obs {
         };
     }
 
+    //! @brief OBS source service
+    //! @tparam NAME string literal containing service name
+    //! @tparam SUMMARY string literal containing short summary
+    //! @tparam DESCR string literal containing long description
+    //! @tparam PARAMS list of obs::param templates with parameter definitions
+    //! @details
+    //! Define an object of this class with template parameters
+    //! describing OBS service name, short summary, long description,
+    //! as well as all service parameters.
+    //!
+    //! Construct the object using `argc` and `argv` argumants passed
+    //! to the `main()` function to store values of its parameters
+    //! usimg command line options according to OBS service conventions.
+    //! You can access them using `get<"name">()` member function template
+    //! (where `"name"` is the string literal with parameter name).
+    //!
+    //! Use rest of the `main()` function to implement whatever
+    //! your service should do.
+    //!
+    //! Example:
+    //! @code
+    //! #include <iostream>
+    //! #include <string>
+    //! #include <optional>
+    //! #include <exception>
+    //! #include <obs/service.hpp>
+    //!
+    //! using service =
+    //!     obs::service<"example", "Example service",
+    //!                  "An example service that prints its parameters.",
+    //!                  obs::param<std::string, "p1",
+    //!                            "String parameter [required]">,
+    //!                  obs::param<std::optional<unsigned int>, "p2",
+    //!                             "Integer parameter [optional]">>;
+    //!
+    //! int main(int argc, const char *const *argv) try {
+    //!     service srv{argc, argv};
+    //!     std::cout << "p1 = " << srv.get<"p1">() << "\n";
+    //!     const auto &p2 = srv.get<"p2">();
+    //!     if (p2)
+    //!         std::cout << "p2 = " << *p2 << std::endl;
+    //!     else
+    //!         std::cout << "p2 is absent\n";
+    //!     return 0;
+    //! } catch (const std::exception &e) {
+    //!     std::cerr << argv[0] << ": Error: " << e.what() << "\n";
+    //!     return 1;
+    //! }
+    //! @endcode
     template <string_literal NAME,
               string_literal SUMMARY,
               string_literal DESCR,
@@ -208,11 +286,21 @@ namespace obs {
             }
 
     public:
+        //! OBS service name
         constexpr static const char *const name = NAME.value;
+
+        //! Short summary
         constexpr static const char *const summary = SUMMARY.value;
+
+        //! Long description
         constexpr static const char *const description = DESCR.value;
+
+        //! OBS service descriptionn in XML format that can be stored
+        //! in NAME.service file
         constexpr static const char *const xml = xml_literal.value;
 
+        //! Generates program options description for the service
+        //! @return options description to parse all program options necessary
         static po::options_description options_description() {
             po::options_description desc("Allowed options");
             desc.add_options()
@@ -223,12 +311,35 @@ namespace obs {
             return desc;
         }
 
+        //! @brief Construct OBS source service from existing variables_map
+        //! @param vm variables map obtained from command line arguments
         service(const po::variables_map &vm)
         : detail::params<PARAMS...>{vm} {}
 
+        //! @brief Construct OBS source service from command line arguments
+        //! @param argc argument counter, first argument of `main()` function
+        //! @param argv argument vector, second argument of `main()` function
+        //! @details
+        //! Create an object of OBS source service
+        //! using `argc` and `argv` arguments of `main()` function
+        //! to initialise it.
+        //!
+        //! The object's constructor takes care ot parsing
+        //! all necessary command line options
+        //! according to OBS service conventions.
+        //!
+        //! Also, it provides special handling for
+        //! the following command line options:
+        //! - `--help`: prints command line options description and exits;
+        //! - `--xml`: prints OBS service XML description and exits;
+        //!   this description can be written to `NAME.service` file
+        //!   (where `NAME` is the name of the OBS service).
         service(int argc, const char *const *argv)
         : detail::params<PARAMS...>{parse_program_args(argc, argv)} {}
 
+        //! @brief Value of service parameter
+        //! @tparam N string literal containing the name of parameter
+        //! @return reference to stored parameter value
         template <string_literal N> const auto &get() const {
             return this->get_impl(detail::name_tag<N>());
         }
