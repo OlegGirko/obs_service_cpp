@@ -98,6 +98,7 @@ using service =
 
 int main(int argc, const char *const *argv) try {
     service srv{argc, argv};
+    std::cout << "outdir = " << srv.outdir() << "\n";
     std::cout << "p1 = " << srv.get<"p1">() << "\n";
     const auto &p2 = srv.get<"p2">();
     if (p2)
@@ -119,12 +120,13 @@ If you compile this program as `obs_service_example`,
 you can invoke it like this:
 
 ```sh
-obs_service_example --p1 aaa --p2 42 --p3 a1 --p3 a2 --p4 yes
+obs_service_example --outdir /tmp --p1 aaa --p2 42 --p3 a1 --p3 a2 --p4 yes
 ```
 
 to get the following output:
 
 ```
+outdir = "/tmp"
 p1 = aaa
 p2 = 42
 p3:

@@ -32,6 +32,7 @@ using service =
 
 int main(int argc, const char *const *argv) try {
     service srv{argc, argv};
+    std::cout << "outdir = " << srv.outdir() << "\n";
     std::cout << "p1 = " << srv.get<"p1">() << "\n";
     const auto &p2 = srv.get<"p2">();
     if (p2)
