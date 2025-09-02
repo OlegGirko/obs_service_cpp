@@ -21,6 +21,7 @@
 #include <vector>
 #include <filesystem>
 #include <cstdlib>
+#include <type_traits>
 
 #include <boost/program_options.hpp>
 
@@ -87,6 +88,19 @@ namespace obs {
     struct param {
         //! OBS parameter type
         using type = TYPE;
+
+        //! OBS parameter name
+        constexpr static const char *const name = NAME.value;
+
+        //! OBS parameter description
+        constexpr static const char *const description = DESCR.value;
+
+        //! OBS parameter value
+        type value;
+
+        //! @brief Construct OBS parameter with value
+        //! @param val value to construct from
+        constexpr explicit param(const type &val): value(val) {}
     };
 
     namespace detail {
@@ -180,7 +194,12 @@ namespace obs {
                   string_literal NAME,
                   string_literal DESCR,
                   typename... PARAMS>
-        struct params<param<TYPE, NAME, DESCR>, PARAMS...>: params<PARAMS...> {
+        class params<param<TYPE, NAME, DESCR>, PARAMS...>:
+        public params<PARAMS...> {
+            using param_type = param<TYPE, NAME, DESCR>;
+            param_type value;
+
+        public:
             constexpr static const string_literal xml_literal =
                 string_literal("  <parameter name=\"") + NAME +
                 string_literal("\">\n") +
@@ -190,14 +209,15 @@ namespace obs {
                 string_literal("  </parameter>\n") +
                 params<PARAMS...>::xml_literal;
 
-            using type = TYPE;
-            type value;
+            using type = typename param_type::type;
 
-            constexpr const type &get_impl(name_tag<NAME>) const {return value;}
+            constexpr const param_type &get_param(name_tag<NAME>) const {
+                return value;
+            }
 
             template <string_literal N>
-            constexpr const auto &get_impl(name_tag<N>) const {
-                return this->params<PARAMS...>::get_impl(name_tag<N>());
+            constexpr const auto &get_param(name_tag<N>) const {
+                return this->params<PARAMS...>::get_param(name_tag<N>());
             }
 
             static void add_options(po::options_description &desc) {
@@ -358,11 +378,30 @@ namespace obs {
         service(int argc, const char *const *argv)
         : service{parse_program_args(argc, argv)} {}
 
+        //! @brief Service parameter by its name
+        //! @tparam N string literal containing the name of parameter
+        //! @return reference to stored parameter
+        template <string_literal N> const auto &param() const {
+            return this->get_param(detail::name_tag<N>());
+        }
+
+        //! @brief Service parameter type by its name
+        //! @tparam N string literal containing the name of parameter
+        template <string_literal N> using param_type =
+            std::remove_cvref_t<
+                decltype(static_cast<const service *>(nullptr)->param<N>())
+            >;
+
+        //! @brief Service parameter's value type by its name
+        //! @tparam N string literal containing the name of parameter
+        template <string_literal N> using param_value_type =
+            param_type<N>::type;
+
         //! @brief Value of service parameter
         //! @tparam N string literal containing the name of parameter
         //! @return reference to stored parameter value
-        template <string_literal N> const auto &get() const {
-            return this->get_impl(detail::name_tag<N>());
+        template <string_literal N> const param_value_type<N> &get() const {
+            return this->param<N>().value;
         }
 
         //! @brief Output directory path
