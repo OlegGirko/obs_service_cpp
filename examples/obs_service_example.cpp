@@ -34,7 +34,7 @@ int main(int argc, const char *const *argv) try {
     service srv{argc, argv};
     std::cout << "outdir = " << srv.outdir() << "\n";
     std::cout << "p1 = " << srv.get<"p1">() << "\n";
-    const auto &p2 = srv.get<"p2">();
+    const service::param_value_type<"p2"> &p2 = srv.get<"p2">();
     if (p2)
         std::cout << "p2 = " << *p2 << std::endl;
     else
