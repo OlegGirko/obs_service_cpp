@@ -1,5 +1,4 @@
 set(EXAMPLES obs_service_example)
-include_directories(${obs_service_cpp_SOURCE_DIR})
 foreach(example ${EXAMPLES})
   add_executable(${example} ${example}.cpp)
   target_link_libraries(${example} Boost::program_options)
